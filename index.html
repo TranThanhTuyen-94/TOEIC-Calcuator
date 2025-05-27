@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TOEIC Score Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      font-size: 1.5em;
+      margin-bottom: 20px;
+    }
+    label {
+      font-size: 1.1em;
+      margin-bottom: 5px;
+      display: block;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 1.1em;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #result {
+      margin-top: 25px;
+      font-size: 1.2em;
+      text-align: center;
+    }
+    #history {
+      margin-top: 30px;
+    }
+    .history-entry {
+      background: #eef;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      font-size: 0.95em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>TOEIC Score Calculator</h2>
+
+    <label for="listening">Listening Raw Score (0–99):</label>
+    <input type="number" id="listening" min="0" max="99" />
+
+    <label for="reading">Reading Raw Score (0–99):</label>
+    <input type="number" id="reading" min="0" max="99" />
+
+    <button onclick="calculateScore()">Calculate</button>
+    <button onclick="clearHistory()">Clear History</button>
+
+    <div id="result"></div>
+
+    <div id="history">
+      <h3>Score History</h3>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <script>
+    const listeningScale = [5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,10,15,20,25,30,35,40,45,50,55,60,70,80,85,90,95,100,105,115,125,135,140,150,160,170,175,180,190,200,205,215,220,225,230,235,245,255,260,265,275,285,290,295,300,310,320,325,330,335,340,345,350,355,360,365,370,375,385,395,400,405,415,420,425,430,435,440,445,455,460,465,475,480,485,490,495,495,495,495,495,495,495,495];
+    const readingScale = [5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,105,115,120,125,130,135,140,145,155,160,170,175,185,195,205,210,215,220,230,240,245,250,255,260,270,275,280,285,290,295,295,300,310,315,320,325,330,335,340,345,355,360,370,375,385,390,395,405,410,415,420,425,435,440,450,455,460,470,475,485,490];
+
+    function calculateScore() {
+      let lRaw = parseInt(document.getElementById("listening").value);
+      let rRaw = parseInt(document.getElementById("reading").value);
+
+      if (isNaN(lRaw) || isNaN(rRaw) || lRaw < 0 || rRaw < 0 || lRaw > 99 || rRaw > 99) {
+        document.getElementById("result").textContent = "Please enter valid scores between 0 and 99.";
+        return;
+      }
+
+      let lScore = listeningScale[lRaw];
+      let rScore = readingScale[rRaw];
+      let total = lScore + rScore;
+
+      const date = new Date().toLocaleString();
+      const entry = {
+        date,
+        lRaw,
+        rRaw,
+        lScore,
+        rScore,
+        total
+      };
+
+      // Save to localStorage
+      let history = JSON.parse(localStorage.getItem("toeicHistory")) || [];
+      history.unshift(entry); // Add to beginning
+      localStorage.setItem("toeicHistory", JSON.stringify(history));
+
+      // Display result and updated history
+      document.getElementById("result").innerHTML =
+        `Listening: ${lScore} / 495<br>` +
+        `Reading: ${rScore} / 495<br>` +
+        `<strong>Total: ${total} / 990</strong>`;
+
+      displayHistory();
+    }
+
+    function displayHistory() {
+      let history = JSON.parse(localStorage.getItem("toeicHistory")) || [];
+      let html = "";
+
+      history.forEach(entry => {
+        html += `
+          <div class="history-entry">
+            <strong>${entry.date}</strong><br>
+            Raw: L ${entry.lRaw}, R ${entry.rRaw}<br>
+            Score: L ${entry.lScore}, R ${entry.rScore}<br>
+            Total: <strong>${entry.total} / 990</strong>
+          </div>`;
+      });
+
+      document.getElementById("historyList").innerHTML = html || "<p>No history yet.</p>";
+    }
+
+    function clearHistory() {
+      localStorage.removeItem("toeicHistory");
+      document.getElementById("historyList").innerHTML = "<p>History cleared.</p>";
+    }
+
+    // Load history when the page opens
+    window.onload = displayHistory;
+  </script>
+</body>
+</html>
